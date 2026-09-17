@@ -286,6 +286,18 @@ function setupToolbarEvents() {
     }
   });
 
+  // Minimize / Expand Toolbar Right Toggle
+  const toggleRightBtn = document.getElementById('btn-toggle-toolbar-right');
+  const toolbarRight = document.getElementById('toolbar-right');
+  if (toggleRightBtn && toolbarRight) {
+    toggleRightBtn.addEventListener('click', () => {
+      toolbarRight.classList.toggle('collapsed');
+      const isCollapsed = toolbarRight.classList.contains('collapsed');
+      toggleRightBtn.setAttribute('data-tooltip', isCollapsed ? 'Expand Controls' : 'Minimize Controls');
+      playPop();
+    });
+  }
+
   // Zoom Controls
   document.getElementById('btn-zoom-fit')?.addEventListener('click', () => {
     zoomToFit();

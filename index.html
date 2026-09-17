@@ -142,37 +142,42 @@
       </div>
 
       <!-- Floating Toolbar Right (View Controls & Export) -->
-      <div class="floating-toolbar toolbar-right glass-panel">
-        <button id="btn-zoom-fit" class="icon-btn tooltip" data-tooltip="Fit All Nodes (Auto Center)">
-          <span>🎯</span>
+      <div class="floating-toolbar toolbar-right glass-panel" id="toolbar-right">
+        <button id="btn-toggle-toolbar-right" class="icon-btn tooltip" data-tooltip="Minimize Controls">
+          <span class="icon">⚙️</span>
         </button>
-        <button id="btn-zoom-in" class="icon-btn tooltip" data-tooltip="Zoom In (+)">
-          <span>➕</span>
-        </button>
-        <button id="btn-zoom-out" class="icon-btn tooltip" data-tooltip="Zoom Out (-)">
-          <span>➖</span>
-        </button>
-        <button id="btn-zoom-reset" class="icon-btn tooltip" data-tooltip="Reset View (100%)">
-          <span id="zoom-level-text">100%</span>
-        </button>
-        <div class="toolbar-divider"></div>
-        <button id="btn-undo" class="icon-btn tooltip" data-tooltip="Undo (Ctrl+Z)">
-          <span>↩️</span>
-        </button>
-        <button id="btn-redo" class="icon-btn tooltip" data-tooltip="Redo (Ctrl+Y)">
-          <span>↪️</span>
-        </button>
-        <div class="toolbar-divider"></div>
-        <button id="btn-export-json" class="icon-btn tooltip" data-tooltip="Export JSON File">
-          <span>💾</span>
-        </button>
-        <label id="btn-import-json-label" class="icon-btn tooltip" data-tooltip="Import JSON File">
-          <span>📂</span>
-          <input type="file" id="file-import-json" accept=".json" style="display:none;" />
-        </label>
-        <button id="btn-export-image" class="icon-btn tooltip" data-tooltip="Export Image (PNG)">
-          <span>🖼️</span>
-        </button>
+        <div class="toolbar-content" id="toolbar-right-content">
+          <button id="btn-zoom-fit" class="icon-btn tooltip" data-tooltip="Fit All Nodes (Auto Center)">
+            <span>🎯</span>
+          </button>
+          <button id="btn-zoom-in" class="icon-btn tooltip" data-tooltip="Zoom In (+)">
+            <span>➕</span>
+          </button>
+          <button id="btn-zoom-out" class="icon-btn tooltip" data-tooltip="Zoom Out (-)">
+            <span>➖</span>
+          </button>
+          <button id="btn-zoom-reset" class="icon-btn tooltip" data-tooltip="Reset View (100%)">
+            <span id="zoom-level-text">100%</span>
+          </button>
+          <div class="toolbar-divider"></div>
+          <button id="btn-undo" class="icon-btn tooltip" data-tooltip="Undo (Ctrl+Z)">
+            <span>↩️</span>
+          </button>
+          <button id="btn-redo" class="icon-btn tooltip" data-tooltip="Redo (Ctrl+Y)">
+            <span>↪️</span>
+          </button>
+          <div class="toolbar-divider"></div>
+          <button id="btn-export-json" class="icon-btn tooltip" data-tooltip="Export JSON File">
+            <span>💾</span>
+          </button>
+          <label id="btn-import-json-label" class="icon-btn tooltip" data-tooltip="Import JSON File">
+            <span>📂</span>
+            <input type="file" id="file-import-json" accept=".json" style="display:none;" />
+          </label>
+          <button id="btn-export-image" class="icon-btn tooltip" data-tooltip="Export Image (PNG)">
+            <span>🖼️</span>
+          </button>
+        </div>
       </div>
 
       <!-- Quick Canvas Instructions Bar -->

@@ -87,12 +87,22 @@ Outputs optimized bundles to the `dist/` folder.
 ### Deploy to GitHub Pages
 This project is configured with `base: './'` in `vite.config.js` for instant GitHub Pages compatibility.
 
-Deploy directly using `gh-pages`:
+#### Option A: GitHub Actions (Recommended)
+1. In your GitHub Repository, go to **Settings ➔ Pages**.
+2. Under **Build and deployment ➔ Source**, select **GitHub Actions**.
+3. Push your code to `main` branch. The `.github/workflows/deploy.yml` workflow will automatically build and publish your site.
+
+#### Option B: `npm run deploy` CLI
 ```bash
 npm run deploy
 ```
 
-An automated GitHub Actions workflow is also included in `.github/workflows/deploy.yml`.
+> 💡 **Troubleshooting: "Branch main is not allowed to deploy to github-pages due to environment protection rules"**
+> 
+> **How to fix in GitHub Repository Settings:**
+> 1. Go to **Settings ➔ Pages** and set **Source** to **GitHub Actions** (if using workflow) or **Deploy from a branch** (select `gh-pages` branch).
+> 2. Go to **Settings ➔ Environments ➔ `github-pages`**.
+> 3. Under **Deployment branches**, change the rule to **All branches** or add `main` to allowed branches.
 
 ---
 

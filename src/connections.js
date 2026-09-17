@@ -88,9 +88,12 @@ export function initConnections() {
 
 export function updateDragWire(x1, y1, x2, y2) {
   if (!dragWirePath) return;
-  const dy = Math.abs(y2 - y1);
-  const controlOffset = Math.max(60, dy * 0.5);
-  const d = `M ${x1} ${y1} C ${x1} ${y1 + controlOffset}, ${x2} ${y2 - controlOffset}, ${x2} ${y2}`;
+  const deltaY = y2 - y1;
+  const absDy = Math.abs(deltaY);
+  const controlOffset = Math.max(60, absDy * 0.5);
+  const d = deltaY < 0
+    ? `M ${x1} ${y1} C ${x1} ${y1 - controlOffset}, ${x2} ${y2 + controlOffset}, ${x2} ${y2}`
+    : `M ${x1} ${y1} C ${x1} ${y1 + controlOffset}, ${x2} ${y2 - controlOffset}, ${x2} ${y2}`;
   dragWirePath.setAttribute('d', d);
   dragWirePath.classList.remove('hidden');
 }
@@ -151,9 +154,14 @@ export function renderConnections(activeSimNodeId = null) {
         y2 = (rect.top + rect.height / 2 - worldRect.top) / zoom;
       }
 
-      const dy = Math.abs(y2 - y1);
-      const controlOffset = Math.max(60, dy * 0.5);
-      const d = `M ${x1} ${y1} C ${x1} ${y1 + controlOffset}, ${x2} ${y2 - controlOffset}, ${x2} ${y2}`;
+      const deltaY = y2 - y1;
+      const absDy = Math.abs(deltaY);
+      const controlOffset = Math.max(60, absDy * 0.5);
+
+      // Support direct upward wires without looping back around
+      const p1x = x1, p1y = deltaY < 0 ? y1 - controlOffset : y1 + controlOffset;
+      const p2x = x2, p2y = deltaY < 0 ? y2 + controlOffset : y2 - controlOffset;
+      const d = `M ${x1} ${y1} C ${p1x} ${p1y}, ${p2x} ${p2y}, ${x2} ${y2}`;
 
       // Check if active in simulator mode
       const isActive = activeSimNodeId === sourceNode.id || activeSimNodeId === targetNode.id;
@@ -219,12 +227,10 @@ export function renderConnections(activeSimNodeId = null) {
       }
 
       // Render Wire Label along cubic bezier curve at t = 0.55 so it never overlaps the port button
-      if (branch.label && dy > 50) {
+      if (branch.label && absDy > 50) {
         const t = 0.55;
         const mt = 1 - t;
         const p0x = x1, p0y = y1;
-        const p1x = x1, p1y = y1 + controlOffset;
-        const p2x = x2, p2y = y2 - controlOffset;
         const p3x = x2, p3y = y2;
 
         const labelX = mt*mt*mt*p0x + 3*mt*mt*t*p1x + 3*mt*t*t*p2x + t*t*t*p3x;

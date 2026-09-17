@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowCraft ✨ Interactive Flowchart Creator & Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="theme-candy">
+  <div id="app">
+    <!-- Top Bar Navigation & Controls -->
+    <header class="top-nav glass-panel">
+      <div class="nav-brand">
+        <div class="logo-icon">✨</div>
+        <div class="logo-text">
+          <h1>FlowCraft</h1>
+          <span class="badge">Interactive Studio</span>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <!-- Preset Templates Selector -->
+        <div class="control-group">
+          <label for="template-select">📜 Template:</label>
+          <select id="template-select" class="custom-select">
+            <option value="bday-trip" selected>🎂 Birthday Trip! (Handwritten Original)</option>
+            <option value="date-night">❤️ Date Night Planner</option>
+            <option value="coffee-decision">☕ Coffee Decision Tree</option>
+            <option value="tech-support">💻 Tech Support Flow</option>
+            <option value="hero-quest">⚔️ Hero's Quest RPG</option>
+          </select>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="control-group">
+          <label for="theme-select">🎨 Theme:</label>
+          <select id="theme-select" class="custom-select">
+            <option value="theme-candy" selected>🍬 Playful Candy</option>
+            <option value="theme-cyberpunk">🌌 Cyberpunk Neon</option>
+            <option value="theme-cosmic">✨ Cosmic Midnight</option>
+            <option value="theme-sunset">⚡ Sunset Arcade</option>
+            <option value="theme-paper">🎨 Clean Paper</option>
+          </select>
+        </div>
+
+        <!-- Edge Motion Animation Selector -->
+        <div class="control-group">
+          <label for="edge-anim-select">✨ Motion:</label>
+          <select id="edge-anim-select" class="custom-select">
+            <option value="smart" selected>🤖 Smart Vehicles (Auto)</option>
+            <option value="cars">🚗 Cars & Uber</option>
+            <option value="bicycles">🚴 Bicycles</option>
+            <option value="buses">🚌 Buses & Transit</option>
+            <option value="boats">⛴️ Boats & Ferries</option>
+            <option value="pulses">⚡ Energy Pulses</option>
+            <option value="rockets">🚀 Rockets</option>
+            <option value="magic">🦄 Fantasy Magic</option>
+            <option value="none">🚫 None (Static)</option>
+          </select>
+        </div>
+
+        <!-- Audio Toggle -->
+        <button id="btn-audio-toggle" class="icon-btn tooltip" data-tooltip="Toggle Sound Effects">
+          <span class="icon">🔊</span>
+        </button>
+
+        <div class="divider"></div>
+
+        <!-- Copy Share Link Button -->
+        <button id="btn-share-link" class="btn btn-secondary tooltip" data-tooltip="Copy Shareable Link to Clipboard">
+          <span class="icon">🔗</span> Share Link
+        </button>
+
+        <!-- Primary Action: Play Simulator -->
+        <button id="btn-play-flow" class="btn btn-primary pulse-btn">
+          <span class="icon">▶</span> Play Decision Game
+        </button>
+      </div>
+    </header>
+
+    <!-- Canvas Main Container -->
+    <main class="canvas-viewport" id="canvas-viewport">
+      <!-- Background Grid -->
+      <div class="canvas-grid" id="canvas-grid"></div>
+
+      <!-- Canvas World Container (Pan & Zoom target) -->
+      <div class="canvas-world" id="canvas-world">
+        <!-- SVG Connections Layer -->
+        <svg class="connections-layer" id="svg-connections-layer">
+          <defs>
+            <!-- Marker Arrows for different wire styles -->
+            <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+            </marker>
+            <marker id="arrowhead-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent-glow)" />
+            </marker>
+            <!-- Glow Filters -->
+            <filter id="wire-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <g id="svg-wires-group"></g>
+          <path id="drag-wire-path" class="drag-wire-path hidden" d="M 0 0 L 0 0"></path>
+        </svg>
+
+        <!-- HTML Nodes Layer -->
+        <div class="nodes-layer" id="nodes-layer"></div>
+      </div>
+
+      <!-- Floating Toolbar Left (Editing Tools) -->
+      <div class="floating-toolbar toolbar-left glass-panel">
+        <button id="btn-add-start" class="tool-btn tooltip" data-tooltip="Add Start/End Node">
+          <span class="node-icon-preview shape-pill"></span>
+          <span>Start / End</span>
+        </button>
+        <button id="btn-add-decision" class="tool-btn tooltip" data-tooltip="Add Decision Node">
+          <span class="node-icon-preview shape-diamond"></span>
+          <span>Decision</span>
+        </button>
+        <button id="btn-add-action" class="tool-btn tooltip" data-tooltip="Add Action Node">
+          <span class="node-icon-preview shape-rect"></span>
+          <span>Action</span>
+        </button>
+        <button id="btn-add-note" class="tool-btn tooltip" data-tooltip="Add Sticky Note">
+          <span class="node-icon-preview shape-note"></span>
+          <span>Sticky Note</span>
+        </button>
+        <div class="toolbar-divider"></div>
+        <button id="btn-auto-layout" class="tool-btn tooltip" data-tooltip="Organize & Auto-Align Tree">
+          <span class="icon">🪄</span>
+          <span>Auto Layout</span>
+        </button>
+        <button id="btn-clear-canvas" class="tool-btn tooltip" data-tooltip="Clear All Nodes">
+          <span class="icon">🗑️</span>
+          <span>Clear</span>
+        </button>
+      </div>
+
+      <!-- Floating Toolbar Right (View Controls & Export) -->
+      <div class="floating-toolbar toolbar-right glass-panel">
+        <button id="btn-zoom-fit" class="icon-btn tooltip" data-tooltip="Fit All Nodes (Auto Center)">
+          <span>🎯</span>
+        </button>
+        <button id="btn-zoom-in" class="icon-btn tooltip" data-tooltip="Zoom In (+)">
+          <span>➕</span>
+        </button>
+        <button id="btn-zoom-out" class="icon-btn tooltip" data-tooltip="Zoom Out (-)">
+          <span>➖</span>
+        </button>
+        <button id="btn-zoom-reset" class="icon-btn tooltip" data-tooltip="Reset View (100%)">
+          <span id="zoom-level-text">100%</span>
+        </button>
+        <div class="toolbar-divider"></div>
+        <button id="btn-undo" class="icon-btn tooltip" data-tooltip="Undo (Ctrl+Z)">
+          <span>↩️</span>
+        </button>
+        <button id="btn-redo" class="icon-btn tooltip" data-tooltip="Redo (Ctrl+Y)">
+          <span>↪️</span>
+        </button>
+        <div class="toolbar-divider"></div>
+        <button id="btn-export-json" class="icon-btn tooltip" data-tooltip="Export JSON File">
+          <span>💾</span>
+        </button>
+        <label id="btn-import-json-label" class="icon-btn tooltip" data-tooltip="Import JSON File">
+          <span>📂</span>
+          <input type="file" id="file-import-json" accept=".json" style="display:none;" />
+        </label>
+        <button id="btn-export-image" class="icon-btn tooltip" data-tooltip="Export Image (PNG)">
+          <span>🖼️</span>
+        </button>
+      </div>
+
+      <!-- Quick Canvas Instructions Bar -->
+      <div class="canvas-tips glass-panel">
+        <span>💡 <b>Tips:</b> Drag canvas to Pan • Scroll to Zoom • Drag ports (🔵) to connect nodes • Double-click node to edit</span>
+      </div>
+    </main>
+
+    <!-- Node Inspector Drawer (Right Slide-in) -->
+    <aside id="node-inspector" class="inspector-drawer glass-panel hidden">
+      <div class="drawer-header">
+        <h3>✏️ Edit Node</h3>
+        <button id="btn-close-inspector" class="close-btn">&times;</button>
+      </div>
+      <div class="drawer-content">
+        <div class="form-group">
+          <label for="inspector-title">Title / Question</label>
+          <input type="text" id="inspector-title" class="form-input" placeholder="e.g. What should we eat?" />
+        </div>
+
+        <div class="form-group">
+          <label for="inspector-subtitle">Subtitle / Details (Optional)</label>
+          <textarea id="inspector-subtitle" class="form-textarea" rows="2" placeholder="e.g. Choose based on craving"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="inspector-shape">Shape</label>
+            <select id="inspector-shape" class="custom-select">
+              <option value="pill">Rounded Pill (Start/End)</option>
+              <option value="diamond">Decision Diamond</option>
+              <option value="rect">Action Card</option>
+              <option value="note">Sticky Note</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="inspector-emoji">Emoji Icon</label>
+            <input type="text" id="inspector-emoji" class="form-input emoji-input" placeholder="✨" maxlength="4" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Node Accent Color</label>
+          <div class="color-picker-grid" id="inspector-color-picker">
+            <button class="color-swatch active" data-color="#3b82f6" style="background:#3b82f6;"></button>
+            <button class="color-swatch" data-color="#ec4899" style="background:#ec4899;"></button>
+            <button class="color-swatch" data-color="#10b981" style="background:#10b981;"></button>
+            <button class="color-swatch" data-color="#f59e0b" style="background:#f59e0b;"></button>
+            <button class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6;"></button>
+            <button class="color-swatch" data-color="#06b6d4" style="background:#06b6d4;"></button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Outgoing Choices / Connections</label>
+          <div id="inspector-branches-list" class="branches-list">
+            <!-- Populated dynamically -->
+          </div>
+          <button id="btn-inspector-add-branch" class="btn btn-secondary btn-sm" style="margin-top: 8px;">
+            ➕ Add Choice Branch
+          </button>
+        </div>
+
+        <div class="drawer-actions">
+          <button id="btn-duplicate-node" class="btn btn-secondary">
+            📋 Duplicate
+          </button>
+          <button id="btn-delete-node" class="btn btn-danger">
+            🗑️ Delete Node
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Interactive Decision Simulator Game Modal / Overlay -->
+    <div id="simulator-overlay" class="simulator-overlay hidden">
+      <div class="simulator-card glass-panel">
+        <div class="simulator-header">
+          <div class="simulator-step-badge">
+            <span class="icon">🎯</span> Step <span id="sim-step-number">1</span>
+          </div>
+          <button id="btn-close-simulator" class="close-btn">&times;</button>
+        </div>
+
+        <div class="simulator-body">
+          <div class="sim-emoji-large" id="sim-emoji">✨</div>
+          <h2 class="sim-title" id="sim-title">Decision Point</h2>
+          <p class="sim-subtitle" id="sim-subtitle">What would you like to do next?</p>
+
+          <!-- Choices Container -->
+          <div class="sim-choices-grid" id="sim-choices-container">
+            <!-- Choice buttons injected dynamically -->
+          </div>
+
+          <!-- Final Outcome Box (Shown on End Node) -->
+          <div id="sim-outcome-box" class="sim-outcome-box hidden">
+            <div class="outcome-banner">🎉 RESULT REACHED! 🎉</div>
+            <p id="sim-outcome-text">You got the ultimate result!</p>
+            <button id="btn-sim-restart" class="btn btn-primary btn-lg" style="margin-top: 16px;">
+              🔄 Play Again
+            </button>
+          </div>
+        </div>
+
+        <div class="simulator-footer">
+          <button id="btn-sim-back" class="btn btn-secondary btn-sm" disabled>
+            ⬅️ Go Back One Step
+          </button>
+          <div class="sim-progress-track">
+            <div id="sim-progress-bar" class="sim-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

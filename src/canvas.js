@@ -164,24 +164,46 @@ function clientToWorld(clientX, clientY) {
 }
 
 function setupViewportEvents() {
-  // Zoom on Wheel
+  // Zoom on Wheel (Desktop)
   viewportEl.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     setZoom(scale * zoomFactor, { x: e.clientX, y: e.clientY });
   }, { passive: false });
 
-  // Mouse Down - Handle Pan, Node Selection, or Wire Dragging
-  viewportEl.addEventListener('mousedown', (e) => {
-    const nodeEl = e.target.closest('.flow-node');
-    const portOutput = e.target.closest('.port-output') || e.target.closest('.branch-tag');
-    const inspectorDrawer = e.target.closest('#node-inspector');
+  // Touch Pinch-to-Zoom State
+  let initialPinchDist = 0;
+  let initialPinchScale = 1.0;
 
-    if (inspectorDrawer) return;
+  function handlePointerDown(e) {
+    // 2-finger Touch Pinch Initialization
+    if (e.touches && e.touches.length > 1) {
+      isPanning = false;
+      isDraggingNode = false;
+      isConnectingWire = false;
+      if (e.touches.length === 2) {
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
+        initialPinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        initialPinchScale = scale;
+      }
+      return;
+    }
+
+    const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
+    const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : 0);
+    const target = e.target;
+
+    const nodeEl = target.closest('.flow-node');
+    const portOutput = target.closest('.port-output') || target.closest('.branch-tag');
+    const inspectorDrawer = target.closest('#node-inspector');
+    const simulatorOverlay = target.closest('#simulator-overlay');
+
+    if (inspectorDrawer || simulatorOverlay) return;
 
     if (portOutput && nodeEl) {
       // Start Wire Connection Drag
-      e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
       isConnectingWire = true;
       wireSourceNodeId = nodeEl.dataset.id;
       wireSourceBranchId = portOutput.dataset.branchId || null;
@@ -191,13 +213,13 @@ function setupViewportEvents() {
 
     if (nodeEl) {
       // Start Dragging Node
-      e.stopPropagation();
+      if (e.cancelable) e.preventDefault();
       isDraggingNode = true;
       draggedNodeId = nodeEl.dataset.id;
       selectNode(draggedNodeId);
       playSelect();
 
-      const worldPos = clientToWorld(e.clientX, e.clientY);
+      const worldPos = clientToWorld(clientX, clientY);
       const state = getState();
       const node = state.nodes.find(n => n.id === draggedNodeId);
       if (node) {
@@ -207,27 +229,46 @@ function setupViewportEvents() {
       return;
     }
 
-    // Otherwise, Pan Canvas
-    if (e.target === viewportEl || e.target === gridEl || e.target === worldEl || e.target.closest('#svg-connections-layer')) {
+    // Otherwise, Pan Canvas on touching any area outside nodes and UI
+    if (!nodeEl && !target.closest('.floating-toolbar') && !target.closest('.top-nav')) {
+      if (e.cancelable) e.preventDefault();
       isPanning = true;
-      panStartX = e.clientX - panX;
-      panStartY = e.clientY - panY;
+      panStartX = clientX - panX;
+      panStartY = clientY - panY;
       viewportEl.classList.add('panning');
       selectNode(null);
     }
-  });
+  }
 
-  // Mouse Move
-  window.addEventListener('mousemove', (e) => {
+  function handlePointerMove(e) {
+    // 2-finger Touch Pinch to Zoom
+    if (e.touches && e.touches.length === 2) {
+      if (e.cancelable) e.preventDefault();
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      if (initialPinchDist > 0) {
+        const factor = dist / initialPinchDist;
+        const cx = (t1.clientX + t2.clientX) / 2;
+        const cy = (t1.clientY + t2.clientY) / 2;
+        setZoom(initialPinchScale * factor, { x: cx, y: cy });
+      }
+      return;
+    }
+
+    const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
+    const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : 0);
+
     if (isPanning) {
-      panX = e.clientX - panStartX;
-      panY = e.clientY - panStartY;
+      panX = clientX - panStartX;
+      panY = clientY - panStartY;
       updateTransform();
       return;
     }
 
     if (isDraggingNode && draggedNodeId) {
-      const worldPos = clientToWorld(e.clientX, e.clientY);
+      if (e.cancelable) e.preventDefault();
+      const worldPos = clientToWorld(clientX, clientY);
       const newX = worldPos.x - nodeDragOffsetX;
       const newY = worldPos.y - nodeDragOffsetY;
       moveNode(draggedNodeId, newX, newY, false);
@@ -236,7 +277,8 @@ function setupViewportEvents() {
     }
 
     if (isConnectingWire && wireSourceNodeId) {
-      const worldPos = clientToWorld(e.clientX, e.clientY);
+      if (e.cancelable) e.preventDefault();
+      const worldPos = clientToWorld(clientX, clientY);
       const sourceEl = document.getElementById(`node-${wireSourceNodeId}`);
       if (sourceEl) {
         const state = getState();
@@ -247,16 +289,22 @@ function setupViewportEvents() {
       }
       return;
     }
-  });
+  }
 
-  // Mouse Up
-  window.addEventListener('mouseup', (e) => {
+  function handlePointerUp(e) {
+    initialPinchDist = 0;
+
     if (isPanning) {
       isPanning = false;
       viewportEl.classList.remove('panning');
     }
 
     if (isDraggingNode && draggedNodeId) {
+      const state = getState();
+      const node = state.nodes.find(n => n.id === draggedNodeId);
+      if (node) {
+        moveNode(draggedNodeId, node.x, node.y, true); // Record history on drag end
+      }
       isDraggingNode = false;
       draggedNodeId = null;
     }
@@ -265,8 +313,10 @@ function setupViewportEvents() {
       isConnectingWire = false;
       hideDragWire();
 
-      const targetPort = e.target.closest('.port-input');
-      const targetNodeEl = e.target.closest('.flow-node');
+      const clientX = e.clientX ?? (e.changedTouches ? e.changedTouches[0].clientX : 0);
+      const clientY = e.clientY ?? (e.changedTouches ? e.changedTouches[0].clientY : 0);
+      const dropTarget = document.elementFromPoint(clientX, clientY);
+      const targetNodeEl = dropTarget ? dropTarget.closest('.flow-node') : null;
 
       if (targetNodeEl && wireSourceNodeId) {
         const targetNodeId = targetNodeEl.dataset.id;
@@ -279,7 +329,18 @@ function setupViewportEvents() {
       wireSourceNodeId = null;
       wireSourceBranchId = null;
     }
-  });
+  }
+
+  // Mouse & Pointer Listeners
+  viewportEl.addEventListener('mousedown', handlePointerDown);
+  window.addEventListener('mousemove', handlePointerMove);
+  window.addEventListener('mouseup', handlePointerUp);
+
+  // Touch Listeners for Mobile & Tablets
+  viewportEl.addEventListener('touchstart', handlePointerDown, { passive: false });
+  window.addEventListener('touchmove', handlePointerMove, { passive: false });
+  window.addEventListener('touchend', handlePointerUp);
+  window.addEventListener('touchcancel', handlePointerUp);
 }
 
 export function renderNodes(activeSimNodeId = null) {

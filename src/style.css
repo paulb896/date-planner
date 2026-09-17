@@ -336,8 +336,10 @@ body.theme-paper .form-textarea {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   cursor: grab;
+  touch-action: none; /* Full custom touch pan, node drag, wire draw, & 2-finger pinch zoom */
 }
 
 .canvas-viewport.panning {

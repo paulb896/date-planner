@@ -155,10 +155,20 @@ export function updateNode(nodeId, changes) {
 export function moveNode(nodeId, x, y, recordHistory = true) {
   const node = state.nodes.find(n => n.id === nodeId);
   if (!node) return;
-  if (recordHistory) pushHistory();
   node.x = Math.round(x);
   node.y = Math.round(y);
-  notify();
+
+  if (recordHistory) {
+    pushHistory();
+    notify();
+  } else {
+    // Fast direct DOM update during live dragging to preserve touch/mouse tracking
+    const nodeEl = document.getElementById(`node-${nodeId}`);
+    if (nodeEl) {
+      nodeEl.style.left = `${node.x}px`;
+      nodeEl.style.top = `${node.y}px`;
+    }
+  }
 }
 
 export function deleteNode(nodeId) {
